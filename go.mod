@@ -1,4 +1,4 @@
-module github.com/nonlogicaldev/nld.git-ext
+module github.com/NonLogicalDev/nld.git-ext
 
 require (
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc // indirect

@@ -1,1 +1,1 @@
-package noop // import "github.com/nonlogicaldev/nld.git-ext"
+package noop // import "github.com/NonLogicalDev/nld.git-ext"

@@ -2,7 +2,7 @@ package arc
 
 import (
 	"regexp"
-	"github.com/nonlogicaldev/nld.git-ext/lib/shutils"
+	"github.com/NonLogicalDev/nld.git-ext/lib/shutils"
 	"fmt"
 	"os"
 )

@@ -1,7 +1,7 @@
 package git
 
 import (
-	"github.com/nonlogicaldev/nld.git-ext/lib/shutils"
+	"github.com/NonLogicalDev/nld.git-ext/lib/shutils"
 	"os/exec"
 	"github.com/pkg/errors"
 	"fmt"

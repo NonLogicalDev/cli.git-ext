@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/nonlogicaldev/nld.git-ext/lib/shutils/arc"
-	"github.com/nonlogicaldev/nld.git-ext/lib/shutils/git"
+	"github.com/NonLogicalDev/nld.git-ext/lib/shutils/arc"
+	"github.com/NonLogicalDev/nld.git-ext/lib/shutils/git"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 	"strings"
@@ -66,8 +66,10 @@ func main() {
 		doPhabDiff()
 	case "stack edit":
 		doStackEdit(*stackEditCMDTarget)
-	case "stack _rebase_edit":
+	case "stack rebase-edit":
 		doRebaseFileRewrite(*stackRebaseEditCMDPrefix, *stackRebaseEditCMDFile)
+	default:
+		os.Exit(128)
 	}
 }
 
@@ -117,9 +119,13 @@ func doStackEdit(target string) {
 	mergeBaseCommit, err := git.GetMergeBase(upstreamName, "HEAD")
 	userError(err)
 
+	fmt.Println(mergeBaseCommit)
+	gitEditCMD := fmt.Sprintf("%s stack rebase-edit --prefix=%s ", os.Args[0], targetSha[:7])
+
+	fmt.Println(gitEditCMD)
 	git.
 		Cmd("rebase", "-i", mergeBaseCommit).
-		SetENV( "GIT_SEQUENCE_EDITOR", fmt.Sprintf("%s stack rebase-edit --prefix=%s ", os.Args[0], targetSha[:6])).
+		SetENV( "GIT_SEQUENCE_EDITOR", gitEditCMD).
 		SetENV( "LANG", "en_US.UTF-8").
 		PipeStdout(os.Stdout).PipeStderr(os.Stderr).
 		Run()
