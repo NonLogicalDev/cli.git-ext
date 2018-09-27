@@ -17,7 +17,7 @@ func RevisionFromMessage(message string) (string) {
 	 return groups[1]
 }
 
-func Diff(base, updateRevision string, extArgs *[]string) (error) {
+func Diff(base, updateRevision string, extArgs []string) (error) {
 	args := []interface{}{
 		"diff", fmt.Sprintf("--base=%v", base),
 	}
@@ -26,10 +26,8 @@ func Diff(base, updateRevision string, extArgs *[]string) (error) {
 		args = append(args, fmt.Sprintf("--update=%v", updateRevision))
 	}
 
-	if extArgs != nil {
-		for _, a := range *extArgs {
-			args = append(args, a)
-		}
+	for _, a := range extArgs {
+		args = append(args, a)
 	}
 
 	return shutils.
