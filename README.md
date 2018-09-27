@@ -1,3 +1,9 @@
+To install run
+```
+go get github.com/NonLogicalDev/nld.git-ext/...
+```
+
+Documentation of commands:
 ```
 usage: git-ext [<flags>] <command> [<args> ...]
 
