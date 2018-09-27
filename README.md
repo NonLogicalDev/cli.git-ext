@@ -26,12 +26,7 @@ Commands:
 
     --update=UPDATE  A spefic revision to update.
 
-  stack edit [<target>]
+  stack edit <target>
     Launch interactive rebase session to edit a given commit from history.
 
-
-  stack rebase-edit --prefix=PREFIX <file>
-    Rewrite rebase todo file.
-
-    --prefix=PREFIX  Target SHA prefix to mark for edits.
 ```
