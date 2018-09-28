@@ -12,15 +12,9 @@ import (
 	"os"
 )
 
-// Stack CMD
-//stackCMD     = cliParser.Command("stack", "Integration with phabricator.")
-//
-//stackEditCMD = stackCMD.Command("edit", "Launch interactive rebase session to edit a given commit from history.")
-//stackEditCMDTarget = stackEditCMD.Arg("target", "Target SHA to edit.").String()
-//
-//stackRebaseEditCMD = stackCMD.Command("rebase-edit", "Rewrite rebase todo file.")
-//stackRebaseEditCMDPrefix = stackRebaseEditCMD.Flag("prefix", "Target SHA prefix to mark for edits.").Required().String()
-//stackRebaseEditCMDFile   = stackRebaseEditCMD.Arg("file", "Rebase file to read and overwrite.").Required().ExistingFile()
+const(
+	branchLabelPrefix = "D/"
+)
 
 type stackCLI struct {
 	kingpin.CmdClause
@@ -29,6 +23,8 @@ type stackCLI struct {
 	rebaseEditFile string
 
 	editTargetRef string
+
+	rebaseExtraArgs []string
 
 	labelDeleteBranches bool
 }
@@ -40,7 +36,7 @@ func RegisterStackCLI(p *kingpin.Application) {
 	// Rebase Edit
 	c = cli.Command("rebase-edit", "Rewrite rebase todo file.").Hidden().
 		Action(cli.doRebaseFileRewrite)
-	c.Flag("prefix", "Target SHA prefix to mark for edits.").
+	c.Flag("branchLabelPrefix", "Target SHA branchLabelPrefix to mark for edits.").
 		Required().
 		StringVar(&cli.rebaseEditPrefix)
 	c.Arg("file", "Rebase file to read and overwrite.").
@@ -52,7 +48,21 @@ func RegisterStackCLI(p *kingpin.Application) {
 		Action(cli.doEdit)
 	c.Arg("target", "Target commit sha or ref to edit in rebase session.").
 		Required().
+		HintAction(func() (choices []string) {
+			branches, _ := git.ListBranches()
+			for _, branch := range branches {
+				if strings.HasPrefix(branch, branchLabelPrefix) {
+					choices = append(choices, branch)
+				}
+			}
+			return
+		}).
 		StringVar(&cli.editTargetRef)
+
+	c = cli.Command("rebase", "Launch interactive rebase session against upstream.").
+		Action(cli.doRebase)
+	c.Arg("args", "Extra args to pass to `git rebase`").
+		StringsVar(&cli.rebaseExtraArgs)
 
 	// Label
 	c = cli.Command("label", "Label the revisions on a stack.").
@@ -100,6 +110,25 @@ func (cli *stackCLI) doRebaseFileRewrite(ctx *kingpin.ParseContext) (error) {
 	return nil
 }
 
+func (cli *stackCLI) doRebase(ctx *kingpin.ParseContext) (error) {
+	upstreamName, err := git.GetUpstream()
+	clitools.UserError(err)
+
+	gitArgs := []interface{}{
+		"rebase", "-i", upstreamName,
+	}
+	for _, a := range cli.rebaseExtraArgs {
+		gitArgs = append(gitArgs, a)
+	}
+	clitools.UserError(
+		git.Cmd(gitArgs...).
+			PipeStdout(os.Stdout).PipeStderr(os.Stderr).
+			Run().Err(),
+	)
+
+	return nil
+}
+
 func (cli *stackCLI) doEdit(ctx *kingpin.ParseContext) (error) {
 	targetSha, err := git.GetSha(cli.editTargetRef)
 	clitools.UserError(err)
@@ -111,39 +140,46 @@ func (cli *stackCLI) doEdit(ctx *kingpin.ParseContext) (error) {
 	clitools.UserError(err)
 
 	fmt.Println(mergeBaseCommit)
-	gitEditCMD := fmt.Sprintf("%s stack rebase-edit --prefix=%s ", os.Args[0], targetSha[:7])
+	gitEditCMD := fmt.Sprintf("%s stack rebase-edit --branchLabelPrefix=%s ", os.Args[0], targetSha[:7])
 
 	fmt.Println(gitEditCMD)
-	git.
-		Cmd("rebase", "-i", mergeBaseCommit).
-		SetENV( "GIT_SEQUENCE_EDITOR", gitEditCMD).
-		SetENV( "LANG", "en_US.UTF-8").
-		PipeStdout(os.Stdout).PipeStderr(os.Stderr).
-		Run()
+	clitools.UserError(
+		git.
+			Cmd("rebase", "-i", mergeBaseCommit).
+			SetENV( "GIT_SEQUENCE_EDITOR", gitEditCMD).
+			SetENV( "LANG", "en_US.UTF-8").
+			PipeStdout(os.Stdout).PipeStderr(os.Stderr).
+			Run().Err(),
+	)
 
 	return nil
 }
 
 func (cli *stackCLI) doLabel(ctx *kingpin.ParseContext) (error) {
-	prefix := "D/"
-
 	if cli.labelDeleteBranches {
-		branches, err := git.ListBranches()
-		clitools.UserError(err)
+		return cli.doLabelDelete(ctx)
+	}
+	return cli.doLabelCreate(ctx)
+}
 
-		for _, branchName := range branches {
-			if strings.HasPrefix(branchName, prefix) {
-				clitools.UserError(
-					git.RawUnSetBranch(branchName, true).Run().
-						PipeStdout(os.Stdout).
-						Run().Err(),
-				)
-			}
+func (cli *stackCLI) doLabelCreate(ctx *kingpin.ParseContext) (error) {
+	branches, err := git.ListBranches()
+	clitools.UserError(err)
+
+	for _, branchName := range branches {
+		if strings.HasPrefix(branchName, branchLabelPrefix) {
+			clitools.UserError(
+				git.RawUnSetBranch(branchName, true).Run().
+					PipeStdout(os.Stdout).
+					Run().Err(),
+			)
 		}
-
-		return nil
 	}
 
+	return nil
+}
+
+func (cli *stackCLI) doLabelDelete(ctx *kingpin.ParseContext) (error) {
 	upstreamName, err := git.GetUpstream()
 	clitools.UserError(err)
 
@@ -154,7 +190,7 @@ func (cli *stackCLI) doLabel(ctx *kingpin.ParseContext) (error) {
 	clitools.UserError(err)
 
 	for idx := range pendingCommitList {
-		branchName := fmt.Sprintf("%v%02d", prefix, idx)
+		branchName := fmt.Sprintf("%v%02d", branchLabelPrefix, idx)
 		sha := pendingCommitList[len(pendingCommitList)-1-idx]
 
 		fmt.Printf("%02d| Creating branch: %v -> %v\n", idx, branchName, sha)
