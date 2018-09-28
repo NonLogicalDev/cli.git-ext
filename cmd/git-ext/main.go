@@ -20,8 +20,8 @@ func setUpParser() (*kingpin.Application) {
 	cliParser.HelpFlag.Short('h')
 
 	// Register Handlers
-	cli.RegisterPhabCLI(cliParser)
 	cli.RegisterStackCLI(cliParser)
+	cli.RegisterPhabCLI(cliParser)
 
 	return cliParser
 }

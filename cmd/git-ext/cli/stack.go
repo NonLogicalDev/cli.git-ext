@@ -165,7 +165,7 @@ func (cli *stackCLI) doLabel(ctx *kingpin.ParseContext) (error) {
 	return cli.doLabelCreate(ctx)
 }
 
-func (cli *stackCLI) doLabelCreate(ctx *kingpin.ParseContext) (error) {
+func (cli *stackCLI) doLabelDelete(ctx *kingpin.ParseContext) (error) {
 	branches, err := git.ListBranches()
 	clitools.UserError(err)
 
@@ -182,7 +182,7 @@ func (cli *stackCLI) doLabelCreate(ctx *kingpin.ParseContext) (error) {
 	return nil
 }
 
-func (cli *stackCLI) doLabelDelete(ctx *kingpin.ParseContext) (error) {
+func (cli *stackCLI) doLabelCreate(ctx *kingpin.ParseContext) (error) {
 	upstreamName, err := git.GetUpstream()
 	clitools.UserError(err)
 
