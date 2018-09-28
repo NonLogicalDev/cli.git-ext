@@ -61,7 +61,7 @@ func RegisterStackCLI(p *kingpin.Application) {
 
 	c = cli.Command("rebase", "Launch interactive rebase session against upstream.").
 		Action(cli.doRebase)
-	c.Arg("args", "Extra args to pass to `git rebase`").
+	c.Arg("args", "Extra args to pass to `git rebase`, example `rebase -- -x 'make build'`").
 		StringsVar(&cli.rebaseExtraArgs)
 
 	// Label
