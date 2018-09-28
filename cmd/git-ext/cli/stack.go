@@ -29,6 +29,8 @@ type stackCLI struct {
 	rebaseEditFile string
 
 	editTargetRef string
+
+	labelDeleteBranches bool
 }
 
 func RegisterStackCLI(p *kingpin.Application) {
@@ -51,6 +53,12 @@ func RegisterStackCLI(p *kingpin.Application) {
 	c.Arg("target", "Target commit sha or ref to edit in rebase session.").
 		Required().
 		StringVar(&cli.editTargetRef)
+
+	// Label
+	c = cli.Command("label", "Label the revisions on a stack.").
+		Action(cli.doLabel)
+	c.Flag("delete", "Target commit sha or ref to edit in rebase session.").Short('D').
+		BoolVar(&cli.labelDeleteBranches)
 
 	// NoQA:
 	_ = c
@@ -112,6 +120,48 @@ func (cli *stackCLI) doEdit(ctx *kingpin.ParseContext) (error) {
 		SetENV( "LANG", "en_US.UTF-8").
 		PipeStdout(os.Stdout).PipeStderr(os.Stderr).
 		Run()
+
+	return nil
+}
+
+func (cli *stackCLI) doLabel(ctx *kingpin.ParseContext) (error) {
+	prefix := "D/"
+
+	if cli.labelDeleteBranches {
+		branches, err := git.ListBranches()
+		clitools.UserError(err)
+
+		for _, branchName := range branches {
+			if strings.HasPrefix(branchName, prefix) {
+				out, cmd := git.RawUnSetBranch(branchName, true)
+				clitools.UserError(cmd.Err())
+
+				fmt.Println(out)
+			}
+		}
+
+		return nil
+	}
+
+	upstreamName, err := git.GetUpstream()
+	clitools.UserError(err)
+
+	merrgeBaseCommit, err := git.GetMergeBase(upstreamName, "HEAD")
+	clitools.UserError(err)
+
+	pendingCommitList, err := git.ListObjectsInRange(fmt.Sprintf("%v^1", merrgeBaseCommit), "HEAD")
+	clitools.UserError(err)
+
+	for idx, _ := range pendingCommitList {
+		branchName := fmt.Sprintf("%v%02d", prefix, idx)
+		sha := pendingCommitList[len(pendingCommitList)-1-idx]
+
+		fmt.Printf("%02d| Creating branch: %v -> %v\n", idx, branchName, sha)
+		out, cmd := git.RawSetBranch(sha, branchName, true)
+		clitools.UserError(cmd.Err())
+
+		fmt.Printf(out)
+	}
 
 	return nil
 }

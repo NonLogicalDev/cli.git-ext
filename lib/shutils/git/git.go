@@ -32,6 +32,14 @@ func ListObjectsInRange(refA, refB string) ([]string, error) {
 	return strings.Split(listStr, "\n"), nil
 }
 
+func ListBranches() ([]string, error) {
+	listStr, err := wrapRaw(RawListBranches())
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(listStr, "\n"), nil
+}
+
 /*
 	Raw Command Helpers
  */
@@ -72,6 +80,38 @@ func RawGetObjectContents(ref string) (string, *shutils.ShCMD) {
 
 func RawGetCommitStat(ref string) (string, *shutils.ShCMD) {
 	cmd := Cmd("show", "--oneline", "--stat", ref).Run()
+	return cmd.StdoutStr(), cmd
+}
+
+func RawSetBranch(ref, name string, force bool) (string, *shutils.ShCMD) {
+	var args = []interface{}{
+		"branch", "--create-reflog",
+	}
+	if force {
+		args = append(args, "-f")
+	}
+	args = append(args, name)
+	args = append(args, ref)
+
+	cmd := Cmd(args...).Run()
+	return cmd.StdoutStr(), cmd
+}
+
+func RawUnSetBranch(name string, force bool) (string, *shutils.ShCMD) {
+	var args = []interface{}{
+		"branch", "--create-reflog", "-D",
+	}
+	if force {
+		args = append(args, "-f")
+	}
+	args = append(args, name)
+
+	cmd := Cmd(args...).Run()
+	return cmd.StdoutStr(), cmd
+}
+
+func RawListBranches() (string, *shutils.ShCMD) {
+	cmd := Cmd("branch", "--list", "-a", "--format=%(refname:short)").Run()
 	return cmd.StdoutStr(), cmd
 }
 
