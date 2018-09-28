@@ -30,7 +30,7 @@ type stackCLI struct {
 }
 
 func RegisterStackCLI(p *kingpin.Application) {
-	cli := &stackCLI{CmdClause: *p.Command("stack", "Integration with phabricator.")}
+	cli := &stackCLI{CmdClause: *p.Command("stack", "Git macros to make working with a stack of commits easier.").Alias("st")}
 	var c *kingpin.CmdClause
 
 	// Rebase Edit
@@ -45,6 +45,7 @@ func RegisterStackCLI(p *kingpin.Application) {
 
 	// Edit
 	c = cli.Command("edit", "Launch interactive rebase session to edit a given commit from history.").
+		Alias("e").
 		Action(cli.doEdit)
 	c.Arg("target", "Target commit sha or ref to edit in rebase session.").
 		Required().
@@ -60,12 +61,14 @@ func RegisterStackCLI(p *kingpin.Application) {
 		StringVar(&cli.editTargetRef)
 
 	c = cli.Command("rebase", "Launch interactive rebase session against upstream.").
+		Alias("rb").
 		Action(cli.doRebase)
 	c.Arg("args", "Extra args to pass to `git rebase`, example `rebase -- -x 'make build'`").
 		StringsVar(&cli.rebaseExtraArgs)
 
 	// Label
 	c = cli.Command("label", "Label the revisions on a stack.").
+		Alias("l").
 		Action(cli.doLabel)
 	c.Flag("delete", "Target commit sha or ref to edit in rebase session.").Short('D').
 		BoolVar(&cli.labelDeleteBranches)
