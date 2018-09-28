@@ -31,6 +31,7 @@ func Cmd(name string, args ...interface{}) *ShCMD {
 
 	cmd.X.Stdout = &cmd.stdout
 	cmd.X.Stderr = &cmd.stderr
+	cmd.X.Stdin = os.Stdin
 
 	return cmd
 }
@@ -42,6 +43,11 @@ func (cmd *ShCMD) SetENV(key, value string) (*ShCMD) {
 
 func (cmd *ShCMD) Run() (*ShCMD) {
 	cmd.X.Run()
+	return cmd
+}
+
+func (cmd *ShCMD) PipeStdin(reader io.Reader) (*ShCMD) {
+	cmd.X.Stdin = reader
 	return cmd
 }
 

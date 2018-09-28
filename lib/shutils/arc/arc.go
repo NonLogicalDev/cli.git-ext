@@ -32,6 +32,6 @@ func Diff(base, updateRevision string, extArgs []string) (error) {
 
 	return shutils.
 		Cmd("arc", args...).
-		PipeStderr(os.Stderr).PipeStdout(os.Stdout).
+		PipeStderr(os.Stderr).PipeStdout(os.Stdout).PipeStdin(os.Stdin).
 		Run().Err()
 }
