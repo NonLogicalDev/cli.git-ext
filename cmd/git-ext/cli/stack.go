@@ -133,10 +133,11 @@ func (cli *stackCLI) doLabel(ctx *kingpin.ParseContext) (error) {
 
 		for _, branchName := range branches {
 			if strings.HasPrefix(branchName, prefix) {
-				out, cmd := git.RawUnSetBranch(branchName, true)
-				clitools.UserError(cmd.Err())
-
-				fmt.Println(out)
+				clitools.UserError(
+					git.RawUnSetBranch(branchName, true).Run().
+						PipeStdout(os.Stdout).
+						Run().Err(),
+				)
 			}
 		}
 
@@ -152,15 +153,16 @@ func (cli *stackCLI) doLabel(ctx *kingpin.ParseContext) (error) {
 	pendingCommitList, err := git.ListObjectsInRange(fmt.Sprintf("%v^1", merrgeBaseCommit), "HEAD")
 	clitools.UserError(err)
 
-	for idx, _ := range pendingCommitList {
+	for idx := range pendingCommitList {
 		branchName := fmt.Sprintf("%v%02d", prefix, idx)
 		sha := pendingCommitList[len(pendingCommitList)-1-idx]
 
 		fmt.Printf("%02d| Creating branch: %v -> %v\n", idx, branchName, sha)
-		out, cmd := git.RawSetBranch(sha, branchName, true)
-		clitools.UserError(cmd.Err())
-
-		fmt.Printf(out)
+		clitools.UserError(
+			git.RawSetBranch(sha, branchName, true).
+				PipeStdout(os.Stdout).
+				Run().Err(),
+		)
 	}
 
 	return nil

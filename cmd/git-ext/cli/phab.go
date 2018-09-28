@@ -47,20 +47,21 @@ func (cli *phabCLI) doList(ctx *kingpin.ParseContext) (error) {
 	clitools.UserError(err)
 
 	for _, sha := range pendingCommitList {
-		rawCommit, cmd := git.RawGetObjectContents(sha)
-		clitools.UserError(cmd.Err())
+		rawCommit, err := git.RawGetObjectContents(sha).Run().Value()
+		clitools.UserError(err)
 
-		statsRaw, cmd := git.RawGetCommitStat(sha)
-		clitools.UserError(cmd.Err())
+		statsRaw, err := git.RawGetCommitStat(sha).Run().Value()
+		clitools.UserError(err)
 
-		contentsCmd := git.Cmd("-c", "color.ui=always", "log", "--pretty=%C(red)%h%C(yellow)%d%C(reset)\n%s", "-n1", sha).Run()
 		var stats string
 		{
 			s := strings.Split(statsRaw, "\n")
 			stats = s[len(s)-1]
 		}
 
-		contents := contentsCmd.StdoutStr()
+		contents, err := git.Cmd("-c", "color.ui=always", "log", "--pretty=%C(red)%h%C(yellow)%d%C(reset)\n%s", "-n1", sha).Run().Value()
+		clitools.UserError(err)
+
 		rev := arc.RevisionFromMessage(rawCommit)
 
 		fmt.Printf("[%s]\n%s\n%s\n\n", rev, contents, stats)

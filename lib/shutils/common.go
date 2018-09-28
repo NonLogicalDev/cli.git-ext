@@ -89,6 +89,10 @@ func (cmd *ShCMD) StderrStr() (string) {
 	return strings.TrimSpace(cmd.stderr.String())
 }
 
+func (cmd *ShCMD) Value() (string, error) {
+	return cmd.StdoutStr(), cmd.Err()
+}
+
 func (cmd *ShCMD) Err() (error) {
 	if !cmd.HasError() {
 		return nil
