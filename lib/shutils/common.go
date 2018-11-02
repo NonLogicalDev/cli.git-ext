@@ -25,7 +25,6 @@ func Cmd(name string, args ...interface{}) *ShCMD {
 		strArgs = append(strArgs, fmt.Sprintf("%v", arg))
 	}
 	cmd := &ShCMD{X: exec.Command(name, strArgs...)}
-
 	cmd.Args = append(cmd.Args, name)
 	cmd.Args = append(cmd.Args, strArgs...)
 
