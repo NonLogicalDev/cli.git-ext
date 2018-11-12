@@ -1,18 +1,19 @@
 package cli
 
 import (
-	"gopkg.in/alecthomas/kingpin.v2"
-
-	"github.com/NonLogicalDev/nld.git-ext/lib/shutils/git"
-	"github.com/NonLogicalDev/nld.git-ext/lib/clitools"
-	"strings"
 	"fmt"
-	"regexp"
 	"io/ioutil"
 	"os"
+	"regexp"
+	"strings"
+
+	"github.com/NonLogicalDev/nld.git-ext/lib/clitools"
+	"github.com/NonLogicalDev/nld.git-ext/lib/shutils/git"
+
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const(
+const (
 	branchLabelPrefix = "D/"
 )
 
@@ -20,7 +21,7 @@ type stackCLI struct {
 	kingpin.CmdClause
 
 	rebaseEditPrefix string
-	rebaseEditFile string
+	rebaseEditFile   string
 
 	editTargetRef string
 
@@ -77,7 +78,7 @@ func RegisterStackCLI(p *kingpin.Application) {
 	_ = c
 }
 
-func (cli *stackCLI) doRebaseFileRewrite(ctx *kingpin.ParseContext) (error) {
+func (cli *stackCLI) doRebaseFileRewrite(ctx *kingpin.ParseContext) error {
 	file := cli.rebaseEditFile
 	prefix := cli.rebaseEditPrefix
 
@@ -113,7 +114,7 @@ func (cli *stackCLI) doRebaseFileRewrite(ctx *kingpin.ParseContext) (error) {
 	return nil
 }
 
-func (cli *stackCLI) doRebase(ctx *kingpin.ParseContext) (error) {
+func (cli *stackCLI) doRebase(ctx *kingpin.ParseContext) error {
 	upstreamName, err := git.GetUpstream()
 	clitools.UserError(err)
 
@@ -132,7 +133,7 @@ func (cli *stackCLI) doRebase(ctx *kingpin.ParseContext) (error) {
 	return nil
 }
 
-func (cli *stackCLI) doEdit(ctx *kingpin.ParseContext) (error) {
+func (cli *stackCLI) doEdit(ctx *kingpin.ParseContext) error {
 	targetSha, err := git.GetSha(cli.editTargetRef)
 	clitools.UserError(err)
 
@@ -149,8 +150,8 @@ func (cli *stackCLI) doEdit(ctx *kingpin.ParseContext) (error) {
 	clitools.UserError(
 		git.
 			Cmd("rebase", "-i", mergeBaseCommit).
-			SetENV( "GIT_SEQUENCE_EDITOR", gitEditCMD).
-			SetENV( "LANG", "en_US.UTF-8").
+			SetENV("GIT_SEQUENCE_EDITOR", gitEditCMD).
+			SetENV("LANG", "en_US.UTF-8").
 			PipeStdout(os.Stdout).PipeStderr(os.Stderr).
 			Run().Err(),
 	)
@@ -158,14 +159,14 @@ func (cli *stackCLI) doEdit(ctx *kingpin.ParseContext) (error) {
 	return nil
 }
 
-func (cli *stackCLI) doLabel(ctx *kingpin.ParseContext) (error) {
+func (cli *stackCLI) doLabel(ctx *kingpin.ParseContext) error {
 	if cli.labelDeleteBranches {
 		return cli.doLabelDelete(ctx)
 	}
 	return cli.doLabelCreate(ctx)
 }
 
-func (cli *stackCLI) doLabelDelete(ctx *kingpin.ParseContext) (error) {
+func (cli *stackCLI) doLabelDelete(ctx *kingpin.ParseContext) error {
 	branches, err := git.ListBranches()
 	clitools.UserError(err)
 
@@ -182,7 +183,7 @@ func (cli *stackCLI) doLabelDelete(ctx *kingpin.ParseContext) (error) {
 	return nil
 }
 
-func (cli *stackCLI) doLabelCreate(ctx *kingpin.ParseContext) (error) {
+func (cli *stackCLI) doLabelCreate(ctx *kingpin.ParseContext) error {
 	upstreamName, err := git.GetUpstream()
 	clitools.UserError(err)
 

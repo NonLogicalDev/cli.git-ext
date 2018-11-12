@@ -1,19 +1,30 @@
 package cli
 
 import (
-	"gopkg.in/alecthomas/kingpin.v2"
-	"github.com/NonLogicalDev/nld.git-ext/lib/shutils/git"
-	"github.com/NonLogicalDev/nld.git-ext/lib/clitools"
-	"strings"
-	"github.com/NonLogicalDev/nld.git-ext/lib/shutils/arc"
+	"encoding/json"
 	"fmt"
+	"net/url"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/NonLogicalDev/nld.git-ext/lib/clitools"
+	"github.com/NonLogicalDev/nld.git-ext/lib/shutils/arc"
+	"github.com/NonLogicalDev/nld.git-ext/lib/shutils/git"
+
+	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+type jsA = []interface{}
+type jsM = map[string]interface{}
 
 type phabCLI struct {
 	kingpin.CmdClause
 
-	diffUpdateFlag string
+	diffUpdateFlag   string
 	diffCatchAllArgs []string
+
+	diffMessageCopySrc string
 }
 
 func RegisterPhabCLI(p *kingpin.Application) {
@@ -32,11 +43,21 @@ func RegisterPhabCLI(p *kingpin.Application) {
 	c.Arg("args", "Rest of the arguments will be passed to `arc diff`").
 		StringsVar(&cli.diffCatchAllArgs)
 
+	// Msg
+	c = cli.Command("msg", "Get diff information from phab to HEAD commit.").
+		Action(cli.doDiffMessageCopy)
+	c.Arg("revisionid", "The revision id to copy the message from.").Required().
+		StringVar(&cli.diffMessageCopySrc)
+
+	// Sync
+	c = cli.Command("sync", "Get diff information from phab to HEAD commit.").
+		Action(cli.doSyncRevision)
+
 	// NoQA:
 	_ = c
 }
 
-func (cli *phabCLI) doList(ctx *kingpin.ParseContext) (error) {
+func (cli *phabCLI) doList(ctx *kingpin.ParseContext) error {
 	upstreamName, err := git.GetUpstream()
 	clitools.UserError(err)
 
@@ -69,11 +90,64 @@ func (cli *phabCLI) doList(ctx *kingpin.ParseContext) (error) {
 	return nil
 }
 
-func (cli *phabCLI) doDiff(ctx *kingpin.ParseContext) (error) {
+func (cli *phabCLI) doDiff(ctx *kingpin.ParseContext) error {
 	var updateRev string
 	if cli.diffUpdateFlag != "" {
 		updateRev = cli.diffUpdateFlag
 	}
+
 	arc.Diff("git:HEAD^1", updateRev, cli.diffCatchAllArgs)
+	return nil
+}
+
+func (cli *phabCLI) doDiffMessageCopy(ctx *kingpin.ParseContext) error {
+	rx := regexp.MustCompile(`\d+`)
+
+	rev_id_str := rx.FindString(cli.diffMessageCopySrc)
+	if len(rev_id_str) == 0 {
+		clitools.UserErrorStr("Diff", "Incorrect revision name %v.", cli.diffMessageCopySrc)
+	}
+	rev_id, err := strconv.Atoi(rev_id_str)
+	clitools.UserError(err)
+
+	request, _ := json.MarshalIndent(jsM{
+		"revision_id": rev_id,
+	}, "", "  ")
+
+	res, err := arc.ConduitCall("differential.getcommitmessage", request)
+	clitools.UserError(err)
+
+	output := map[string]interface{}{}
+	err = json.Unmarshal([]byte(res), &output)
+	fmt.Println(output["response"])
+	return nil
+}
+
+func (cli *phabCLI) doSyncRevision(ctx *kingpin.ParseContext) error {
+	message, err := git.Cmd("show", "-s", "--format=%B", "HEAD").Run().Value()
+	clitools.UserError(err)
+
+	revIdUrl, err := url.Parse(arc.RevisionFromMessage(message))
+	clitools.UserError(err)
+
+	revId := regexp.MustCompile(`D\d+`).FindString(revIdUrl.Path)
+	title := strings.Split(message, "\n")[0]
+
+	request, _ := json.MarshalIndent(jsM{
+		"objectIdentifier": revId,
+		"transactions": jsA{
+			jsM{
+				"type":  "title",
+				"value": title,
+			},
+		},
+	}, "", "  ")
+	fmt.Println(string(request))
+
+	res, err := arc.ConduitCall("differential.revision.edit", request)
+	clitools.UserError(err)
+
+	fmt.Println(res)
+
 	return nil
 }

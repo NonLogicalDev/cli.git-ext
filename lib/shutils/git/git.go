@@ -1,9 +1,10 @@
 package git
 
 import (
-	"github.com/NonLogicalDev/nld.git-ext/lib/shutils"
 	"fmt"
 	"strings"
+
+	"github.com/NonLogicalDev/nld.git-ext/lib/shutils"
 )
 
 func GetUpstream() (string, error) {
@@ -40,45 +41,45 @@ func ListBranches() ([]string, error) {
 
 /*
 	Raw Command Helpers
- */
+*/
 
 func Cmd(args ...interface{}) *shutils.ShCMD {
 	return shutils.Cmd("git", args...)
 }
 
-func RawGetRoot() (*shutils.ShCMD) {
+func RawGetRoot() *shutils.ShCMD {
 	return Cmd("rev-parse", "--show-toplevel")
 }
 
-func RawGetSha(ref string) (*shutils.ShCMD) {
+func RawGetSha(ref string) *shutils.ShCMD {
 	return Cmd("rev-parse", ref)
 }
 
-func RawGetAbbrevRef(ref string) (*shutils.ShCMD) {
+func RawGetAbbrevRef(ref string) *shutils.ShCMD {
 	return Cmd("rev-parse", "--abbrev-ref", ref)
 }
 
-func RawGetMergeBase(refA, refB string) (*shutils.ShCMD) {
+func RawGetMergeBase(refA, refB string) *shutils.ShCMD {
 	return Cmd("merge-base", refA, refB)
 }
 
-func RawListObjectsInRange(refA, refB string) (*shutils.ShCMD) {
+func RawListObjectsInRange(refA, refB string) *shutils.ShCMD {
 	return Cmd("rev-list", fmt.Sprintf("%v..%v", refA, refB))
 }
 
-func RawGetObjectContents(ref string) (*shutils.ShCMD) {
+func RawGetObjectContents(ref string) *shutils.ShCMD {
 	return Cmd("cat-file", "-p", ref)
 }
 
-func RawGetCommitStat(ref string) (*shutils.ShCMD) {
+func RawGetCommitStat(ref string) *shutils.ShCMD {
 	return Cmd("show", "--oneline", "--stat", ref)
 }
 
-func RawListBranches() (*shutils.ShCMD) {
+func RawListBranches() *shutils.ShCMD {
 	return Cmd("branch", "--list", "-a", "--format=%(refname:short)")
 }
 
-func RawSetBranch(ref, name string, force bool) (*shutils.ShCMD) {
+func RawSetBranch(ref, name string, force bool) *shutils.ShCMD {
 	var args = []interface{}{
 		"branch", "--create-reflog",
 	}
@@ -91,7 +92,7 @@ func RawSetBranch(ref, name string, force bool) (*shutils.ShCMD) {
 	return Cmd(args...)
 }
 
-func RawUnSetBranch(name string, force bool) (*shutils.ShCMD) {
+func RawUnSetBranch(name string, force bool) *shutils.ShCMD {
 	var args = []interface{}{
 		"branch", "--create-reflog", "-D",
 	}
