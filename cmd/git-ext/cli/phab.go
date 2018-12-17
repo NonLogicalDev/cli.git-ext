@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/NonLogicalDev/nld.git-ext/lib/clitools"
@@ -31,33 +30,58 @@ func RegisterPhabCLI(p *kingpin.Application) {
 	cli := &phabCLI{CmdClause: *p.Command("phab", "Integration with phabricator.")}
 	var c *kingpin.CmdClause
 
-	// List:
+	// List Command: ---------------------------------------------
 	c = cli.Command("list", "List current pending stacked revisions on the current branch.").
-		Action(cli.doList)
+		Action(func(context *kingpin.ParseContext) error {
+			return cli.doList()
+		},
+	)
+	//------------------------------------------------------------
 
-	// Diff:
+	// Diff Command: ---------------------------------------------
 	c = cli.Command("diff", "Update or create a diff based on current commit.").
-		Action(cli.doDiff)
+		Action(func(context *kingpin.ParseContext) error {
+			return cli.doDiff(cli.diffUpdateFlag, cli.diffCatchAllArgs)
+		},
+	)
+
 	c.Flag("update", "A spefic revision to update.").
 		StringVar(&cli.diffUpdateFlag)
 	c.Arg("args", "Rest of the arguments will be passed to `arc diff`").
 		StringsVar(&cli.diffCatchAllArgs)
+	//------------------------------------------------------------
 
-	// Msg
+	// Msg Command: ----------------------------------------------
 	c = cli.Command("msg", "Get diff information from phab to HEAD commit.").
-		Action(cli.doDiffMessageCopy)
+		Action(func(context *kingpin.ParseContext) error {
+			return cli.doDiffMessagePrint(cli.diffMessageCopySrc)
+		},
+	)
 	c.Arg("revisionid", "The revision id to copy the message from.").Required().
 		StringVar(&cli.diffMessageCopySrc)
+	//------------------------------------------------------------
 
-	// Sync
+	// Sync Command: ---------------------------------------------
 	c = cli.Command("sync", "Get diff information from phab to HEAD commit.").
-		Action(cli.doSyncRevision)
+		Action(func(context *kingpin.ParseContext) error {
+			return cli.doSyncRevision()
+		},
+	)
+	//------------------------------------------------------------
+
+	// Land Command: ---------------------------------------------
+	c = cli.Command("land", "Land current revision.").
+		Action(func(context *kingpin.ParseContext) error {
+			return cli.doLandRevision()
+		},
+	)
+	//------------------------------------------------------------
 
 	// NoQA:
 	_ = c
 }
 
-func (cli *phabCLI) doList(ctx *kingpin.ParseContext) error {
+func (cli *phabCLI) doList() error {
 	upstreamName, err := git.GetUpstream()
 	clitools.UserError(err)
 
@@ -90,41 +114,25 @@ func (cli *phabCLI) doList(ctx *kingpin.ParseContext) error {
 	return nil
 }
 
-func (cli *phabCLI) doDiff(ctx *kingpin.ParseContext) error {
+func (cli *phabCLI) doDiff(diffUpdate string, extraFlags []string) error {
 	var updateRev string
-	if cli.diffUpdateFlag != "" {
-		updateRev = cli.diffUpdateFlag
+	if diffUpdate != "" {
+		updateRev = diffUpdate
 	}
 
-	arc.Diff("git:HEAD^1", updateRev, cli.diffCatchAllArgs)
+	return arc.Diff("git:HEAD^1", updateRev, extraFlags)
+}
+
+func (cli *phabCLI) doDiffMessagePrint(revisionID string) error {
+	out, err := arc.GetMSGForRevision(revisionID)
+	clitools.UserError(err)
+
+	fmt.Println(out)
 	return nil
 }
 
-func (cli *phabCLI) doDiffMessageCopy(ctx *kingpin.ParseContext) error {
-	rx := regexp.MustCompile(`\d+`)
-
-	rev_id_str := rx.FindString(cli.diffMessageCopySrc)
-	if len(rev_id_str) == 0 {
-		clitools.UserErrorStr("Diff", "Incorrect revision name %v.", cli.diffMessageCopySrc)
-	}
-	rev_id, err := strconv.Atoi(rev_id_str)
-	clitools.UserError(err)
-
-	request, _ := json.MarshalIndent(jsM{
-		"revision_id": rev_id,
-	}, "", "  ")
-
-	res, err := arc.ConduitCall("differential.getcommitmessage", request)
-	clitools.UserError(err)
-
-	output := map[string]interface{}{}
-	err = json.Unmarshal([]byte(res), &output)
-	fmt.Println(output["response"])
-	return nil
-}
-
-func (cli *phabCLI) doSyncRevision(ctx *kingpin.ParseContext) error {
-	message, err := git.Cmd("show", "-s", "--format=%B", "HEAD").Run().Value()
+func (cli *phabCLI) doSyncRevision() error {
+	message, err := git.GetCommitWithFormat("HEAD", "%B")
 	clitools.UserError(err)
 
 	revIdUrl, err := url.Parse(arc.RevisionFromMessage(message))
@@ -148,6 +156,19 @@ func (cli *phabCLI) doSyncRevision(ctx *kingpin.ParseContext) error {
 	clitools.UserError(err)
 
 	fmt.Println(res)
+	return nil
+}
+
+func (cli *phabCLI) doLandRevision() error {
+	arcLand := arc.Cmd("land", "--hold").Unbuffer().Run()
+	if arcLand.HasError() {
+		clitools.UserError(arcLand.Err())
+	}
+
+	gitLand := git.Cmd("push", "origin", "--", "HEAD:master").Unbuffer().Run()
+	if gitLand.HasError() {
+		clitools.UserError(gitLand.Err())
+	}
 
 	return nil
 }

@@ -46,6 +46,10 @@ func (cmd *ShCMD) Run() *ShCMD {
 	return cmd
 }
 
+func (cmd *ShCMD) Unbuffer() *ShCMD {
+	return cmd.PipeStdin(os.Stdin).PipeStderr(os.Stderr).PipeStdout(os.Stdout)
+}
+
 func (cmd *ShCMD) PipeStdin(reader io.Reader) *ShCMD {
 	cmd.X.Stdin = reader
 	return cmd
@@ -104,11 +108,15 @@ func (cmd *ShCMD) Err() error {
 		return nil
 	}
 
-	errorText := cmd.StderrStr()
+	stderrOutput := cmd.StderrStr()
 	code := cmd.X.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
 
-	return errors.Errorf(
-		"Command [%v] failed with status code (%d) STDERR:\n%v",
-		strings.Join(cmd.Args, " "), code, errorText,
+	errText := fmt.Sprintf(
+		"Command [%v] failed with status code (%d)", strings.Join(cmd.Args, " "), code,
 	)
+	if len(stderrOutput) > 0 {
+		errText = fmt.Sprintf("%v STDERR:\n%v", errText, stderrOutput)
+	}
+
+	return errors.New(errText)
 }

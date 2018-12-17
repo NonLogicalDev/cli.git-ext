@@ -39,6 +39,23 @@ func ListBranches() ([]string, error) {
 	return strings.Split(listStr, "\n"), nil
 }
 
+func GetCommitWithFormat(sha, format string) (string, error) {
+	message, err := Cmd(
+		"show", "-s", fmt.Sprintf("--format=%v", format), sha,
+	).Run().Value()
+
+	return message, err
+}
+
+func GetSymbolicRefsForSHA(sha string) ([]string, error) {
+	listStr, err := Cmd("for-each-ref", "--points-at", sha, "--format", "%(refname:short)").Run().Value()
+	if err != nil {
+		return nil, err
+	}
+
+	return strings.Split(listStr, "\n"), nil
+}
+
 /*
 	Raw Command Helpers
 */

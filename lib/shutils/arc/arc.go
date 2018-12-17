@@ -7,9 +7,16 @@ import (
 	"regexp"
 
 	"github.com/NonLogicalDev/nld.git-ext/lib/shutils"
+	"github.com/NonLogicalDev/nld.git-ext/lib/clitools"
+	"strconv"
+	"encoding/json"
+	"github.com/pkg/errors"
 )
 
 var PhabDiffRe = regexp.MustCompile(`(?m)^\s*Differential Revision:\s*(.+)`)
+
+type jsA = []interface{}
+type jsM = map[string]interface{}
 
 func Cmd(args ...interface{}) *shutils.ShCMD {
 	return shutils.Cmd("arc", args...)
@@ -40,6 +47,31 @@ func Diff(base, updateRevision string, extArgs []string) error {
 		Cmd("arc", args...).
 		PipeStderr(os.Stderr).PipeStdout(os.Stdout).PipeStdin(os.Stdin).
 		Run().Err()
+}
+
+func GetMSGForRevision(revisionID string) (string, error) {
+	rx := regexp.MustCompile(`\d+`)
+
+	rev_id_str := rx.FindString(revisionID)
+	if len(rev_id_str) == 0 {
+		return "", errors.Errorf("Incorrect revision name %v.", revisionID)
+	}
+	rev_id, err := strconv.Atoi(rev_id_str)
+	clitools.UserError(err)
+
+	request, _ := json.MarshalIndent(jsM{
+		"revision_id": rev_id,
+	}, "", "  ")
+
+	res, err := ConduitCall("differential.getcommitmessage", request)
+	if err != nil {
+		return "", err
+	}
+
+	output := map[string]interface{}{}
+	err = json.Unmarshal([]byte(res), &output)
+
+	return output["response"].(string), nil
 }
 
 func ConduitCall(endpoint string, params []byte) (string, error) {

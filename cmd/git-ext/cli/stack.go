@@ -10,12 +10,32 @@ import (
 	"github.com/NonLogicalDev/nld.git-ext/lib/clitools"
 	"github.com/NonLogicalDev/nld.git-ext/lib/shutils/git"
 
+	"bytes"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (
 	branchLabelPrefix = "D/"
 )
+
+var metadataPattern = regexp.MustCompile(`^\|(.*)\| (?s:(.*))`)
+var metadataFormat = "|%v| %v"
+
+var branchPattern = regexp.MustCompile(`D/\d+`)
+var branchFormat = "D/%02d"
+
+func metadataFromString(input string) (metadata string, message string) {
+	groups := metadataPattern.FindStringSubmatch(input)
+	if len(groups) > 2 {
+		return groups[1], groups[2]
+	}
+	return "", input
+}
+
+func metadataToString(metadata, message string) (output string) {
+	_, nMessage := metadataFromString(message)
+	return fmt.Sprintf(metadataFormat, metadata, nMessage)
+}
 
 type stackCLI struct {
 	kingpin.CmdClause
@@ -27,7 +47,12 @@ type stackCLI struct {
 
 	rebaseExtraArgs []string
 
+	labelBurninBranch   bool
 	labelDeleteBranches bool
+
+	metaGetFlag   bool
+	metaPutFlag   bool
+	metaValueArgs []string
 }
 
 func RegisterStackCLI(p *kingpin.Application) {
@@ -71,8 +96,22 @@ func RegisterStackCLI(p *kingpin.Application) {
 	c = cli.Command("label", "Label the revisions on a stack.").
 		Alias("l").
 		Action(cli.doLabel)
-	c.Flag("delete", "Target commit sha or ref to edit in rebase session.").Short('D').
+	c.Flag("delete", "Delete the labels from the commits.").Short('d').
 		BoolVar(&cli.labelDeleteBranches)
+	c.Flag("burnin", "Burnin the labels into the commits.").Short('b').
+		BoolVar(&cli.labelBurninBranch)
+
+	// Meta
+	c = cli.Command("meta", "Operate on metadata of commit.").
+		Alias("m").
+		Action(cli.doMeta)
+
+	c.Flag("put", "Put metadata on commit.").Short('p').
+		BoolVar(&cli.metaPutFlag)
+	c.Flag("get", "Put metadata on commit.").Short('g').
+		BoolVar(&cli.metaGetFlag)
+	c.Arg("value", "Value of the arg to set.").
+		StringsVar(&cli.metaValueArgs)
 
 	// NoQA:
 	_ = c
@@ -160,18 +199,33 @@ func (cli *stackCLI) doEdit(ctx *kingpin.ParseContext) error {
 }
 
 func (cli *stackCLI) doLabel(ctx *kingpin.ParseContext) error {
-	if cli.labelDeleteBranches {
+	if cli.labelBurninBranch {
+		return cli.doLabelBurnin(ctx)
+	} else if cli.labelDeleteBranches {
 		return cli.doLabelDelete(ctx)
+	} else {
+		return cli.doLabelCreate(ctx)
 	}
-	return cli.doLabelCreate(ctx)
+}
+
+func (cli *stackCLI) doLabelBurnin(ctx *kingpin.ParseContext) error {
+	refs, err := git.GetSymbolicRefsForSHA("HEAD")
+	clitools.UserError(err)
+	for _, ref := range refs {
+		if branchPattern.MatchString(ref) {
+			cli.metaPutFlag = true
+			cli.metaValueArgs = []string{ref}
+			return cli.doMeta(ctx)
+		}
+	}
+	return nil
 }
 
 func (cli *stackCLI) doLabelDelete(ctx *kingpin.ParseContext) error {
 	branches, err := git.ListBranches()
 	clitools.UserError(err)
-
 	for _, branchName := range branches {
-		if strings.HasPrefix(branchName, branchLabelPrefix) {
+		if branchPattern.MatchString(branchName) {
 			clitools.UserError(
 				git.RawUnSetBranch(branchName, true).Run().
 					PipeStdout(os.Stdout).
@@ -179,7 +233,6 @@ func (cli *stackCLI) doLabelDelete(ctx *kingpin.ParseContext) error {
 			)
 		}
 	}
-
 	return nil
 }
 
@@ -194,7 +247,7 @@ func (cli *stackCLI) doLabelCreate(ctx *kingpin.ParseContext) error {
 	clitools.UserError(err)
 
 	for idx := range pendingCommitList {
-		branchName := fmt.Sprintf("%v%02d", branchLabelPrefix, idx)
+		branchName := fmt.Sprintf(branchFormat, idx)
 		sha := pendingCommitList[len(pendingCommitList)-1-idx]
 
 		fmt.Printf("%02d| Creating branch: %v -> %v\n", idx, branchName, sha)
@@ -206,4 +259,41 @@ func (cli *stackCLI) doLabelCreate(ctx *kingpin.ParseContext) error {
 	}
 
 	return nil
+}
+
+func (cli *stackCLI) doMeta(ctx *kingpin.ParseContext) error {
+	if cli.metaPutFlag {
+		message, err := git.GetCommitWithFormat("HEAD", "%B")
+		clitools.UserError(err)
+
+		_, rawMessage := metadataFromString(message)
+
+		newMessage := rawMessage
+		if len(cli.metaValueArgs) > 0 {
+			rawMetadata := strings.Join(cli.metaValueArgs, ",")
+			newMessage = metadataToString(rawMetadata, rawMessage)
+		}
+
+		messageReader := bytes.NewReader([]byte(newMessage))
+		err = git.Cmd("commit", "--amend", "--file=-").Unbuffer().
+			PipeStdin(messageReader).Run().Err()
+
+		clitools.UserError(err)
+		return nil
+	} else {
+		sha := "HEAD"
+		if len(cli.metaValueArgs) > 0 {
+			sha = cli.metaValueArgs[0]
+		}
+
+		message, err := git.GetCommitWithFormat(sha, "%B")
+		clitools.UserError(err)
+
+		metadata, _ := metadataFromString(message)
+		if len(metadata) > 0 {
+			fmt.Println(metadata)
+		}
+
+		return nil
+	}
 }
