@@ -12,6 +12,7 @@ import (
 	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils/git"
 
 	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils"
 )
 
 type jsA = []interface{}
@@ -160,6 +161,16 @@ func (cli *phabCLI) doSyncRevision() error {
 }
 
 func (cli *phabCLI) doLandRevision() error {
+	err := shutils.Cmd("git-ext", "stack", "meta", "-p").Unbuffer().Run().Err()
+	if err != nil {
+		clitools.UserError(err)
+	}
+
+	err = shutils.Cmd("git-ext", "phab", "sync").Unbuffer().Run().Err()
+	if err != nil {
+		clitools.UserError(err)
+	}
+
 	arcLand := arc.Cmd("land", "--hold").Unbuffer().Run()
 	if arcLand.HasError() {
 		clitools.UserError(arcLand.Err())
