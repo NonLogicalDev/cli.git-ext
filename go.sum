@@ -1,3 +1,5 @@
+github.com/NonLogicalDev/nld.git-ext v0.0.0-20181217185605-74a85f396507 h1:0m+aA7V6/OvcEiEjHRMQ/Tjq7x3kJaoFUq/PzL4hm9k=
+github.com/NonLogicalDev/nld.git-ext v0.0.0-20181217185605-74a85f396507/go.mod h1:T3NsGUkaBLs4leSVV2kNQsv67WM0xdUhCcj+m1tmevY=
 github.com/alecthomas/kingpin v2.2.6+incompatible h1:5svnBTFgJjZvGKyYBtMB0+m5wvrbUHiqye8wRJMlnYI=
 github.com/alecthomas/kingpin v2.2.6+incompatible/go.mod h1:59OFYbFVLKQKq+mqrL6Rw5bR0c3ACQaawgXx0QYndlE=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc h1:cAKDfWh5VpdgMhJosfJnn5/FoN2SRZ4p7fJNX58YPaU=
