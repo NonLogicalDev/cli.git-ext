@@ -1,9 +1,11 @@
 module github.com/NonLogicalDev/nld.cli.git-ext
 
 require (
-	github.com/NonLogicalDev/nld.git-ext v0.0.0-20181217185605-74a85f396507
-	github.com/alecthomas/kingpin v2.2.6+incompatible
-	github.com/davecgh/go-spew v1.1.1
+	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc // indirect
+	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pkg/errors v0.8.0
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/stretchr/testify v1.2.2 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
