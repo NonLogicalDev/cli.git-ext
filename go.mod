@@ -1,4 +1,4 @@
-module github.com/NonLogicalDev/nld.git-ext
+module github.com/NonLogicalDev/nld.cli.git-ext
 
 require (
 	github.com/alecthomas/kingpin v2.2.6+incompatible
