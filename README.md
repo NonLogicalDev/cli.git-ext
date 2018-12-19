@@ -1,6 +1,6 @@
 To install run
 ```
-go get github.com/NonLogicalDev/nld.git-ext/...
+go get github.com/NonLogicalDev/nld.cli.git-ext/...
 ```
 
 Documentation of commands:
