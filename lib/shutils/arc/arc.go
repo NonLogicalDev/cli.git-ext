@@ -6,8 +6,8 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/NonLogicalDev/nld.git-ext/lib/shutils"
-	"github.com/NonLogicalDev/nld.git-ext/lib/clitools"
+	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils"
+	"github.com/NonLogicalDev/nld.cli.git-ext/lib/clitools"
 	"strconv"
 	"encoding/json"
 	"github.com/pkg/errors"
