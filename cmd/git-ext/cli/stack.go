@@ -9,9 +9,9 @@ import (
 
 	"github.com/NonLogicalDev/nld.cli.git-ext/lib/clitools"
 	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils/git"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 
 	"bytes"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (

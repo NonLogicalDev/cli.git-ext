@@ -6,7 +6,7 @@ import (
 	"github.com/NonLogicalDev/nld.cli.git-ext/cmd/git-ext/cli"
 	"github.com/NonLogicalDev/nld.cli.git-ext/lib/clitools"
 
-	"gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 func init() {

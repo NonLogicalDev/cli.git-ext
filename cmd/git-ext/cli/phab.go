@@ -11,8 +11,7 @@ import (
 	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils/arc"
 	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils/git"
 
-	"gopkg.in/alecthomas/kingpin.v2"
-	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 type jsA = []interface{}
@@ -35,16 +34,14 @@ func RegisterPhabCLI(p *kingpin.Application) {
 	c = cli.Command("list", "List current pending stacked revisions on the current branch.").
 		Action(func(context *kingpin.ParseContext) error {
 			return cli.doList()
-		},
-	)
+		})
 	//------------------------------------------------------------
 
 	// Diff Command: ---------------------------------------------
 	c = cli.Command("diff", "Update or create a diff based on current commit.").
 		Action(func(context *kingpin.ParseContext) error {
 			return cli.doDiff(cli.diffUpdateFlag, cli.diffCatchAllArgs)
-		},
-	)
+		})
 
 	c.Flag("update", "A spefic revision to update.").
 		StringVar(&cli.diffUpdateFlag)
@@ -56,8 +53,7 @@ func RegisterPhabCLI(p *kingpin.Application) {
 	c = cli.Command("msg", "Get diff information from phab to HEAD commit.").
 		Action(func(context *kingpin.ParseContext) error {
 			return cli.doDiffMessagePrint(cli.diffMessageCopySrc)
-		},
-	)
+		})
 	c.Arg("revisionid", "The revision id to copy the message from.").Required().
 		StringVar(&cli.diffMessageCopySrc)
 	//------------------------------------------------------------
@@ -66,16 +62,14 @@ func RegisterPhabCLI(p *kingpin.Application) {
 	c = cli.Command("sync", "Get diff information from phab to HEAD commit.").
 		Action(func(context *kingpin.ParseContext) error {
 			return cli.doSyncRevision()
-		},
-	)
+		})
 	//------------------------------------------------------------
 
 	// Land Command: ---------------------------------------------
 	c = cli.Command("land", "Land current revision.").
 		Action(func(context *kingpin.ParseContext) error {
 			return cli.doLandRevision()
-		},
-	)
+		})
 	//------------------------------------------------------------
 
 	// NoQA:
@@ -161,15 +155,8 @@ func (cli *phabCLI) doSyncRevision() error {
 }
 
 func (cli *phabCLI) doLandRevision() error {
-	err := shutils.Cmd("git-ext", "stack", "meta", "-p").Unbuffer().Run().Err()
-	if err != nil {
-		clitools.UserError(err)
-	}
-
-	err = shutils.Cmd("git-ext", "phab", "sync").Unbuffer().Run().Err()
-	if err != nil {
-		clitools.UserError(err)
-	}
+	// It is recommened to create the following shortcut
+	// `git xland: "phab stack meta -p && phab sync && phab land"`
 
 	arcLand := arc.Cmd("land", "--hold").Unbuffer().Run()
 	if arcLand.HasError() {

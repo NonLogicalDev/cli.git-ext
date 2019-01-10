@@ -2,14 +2,14 @@ package arc
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
-
-	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils"
-	"github.com/NonLogicalDev/nld.cli.git-ext/lib/clitools"
 	"strconv"
-	"encoding/json"
+
+	"github.com/NonLogicalDev/nld.cli.git-ext/lib/clitools"
+	shutils "github.com/NonLogicalDev/nld.lib.go.shutils"
 	"github.com/pkg/errors"
 )
 

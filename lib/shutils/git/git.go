@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils"
+	shutils "github.com/NonLogicalDev/nld.lib.go.shutils"
 )
 
 func GetUpstream() (string, error) {
