@@ -18,8 +18,8 @@ const (
 	branchLabelPrefix = "D/"
 )
 
-var metadataPattern = regexp.MustCompile(`^\|(.*)\| (?s:(.*))`)
-var metadataFormat = "|%v| %v"
+var metadataPattern = regexp.MustCompile(`(?s:(.*)) \| \[(.*)]$`)
+var metadataFormat = "%v | [%v]"
 
 var branchPattern = regexp.MustCompile(`D/\d+`)
 var branchFormat = "D/%02d"
