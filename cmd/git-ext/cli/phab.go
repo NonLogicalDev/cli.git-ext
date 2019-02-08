@@ -20,6 +20,8 @@ type jsM = map[string]interface{}
 type phabCLI struct {
 	kingpin.CmdClause
 
+	listBaseFlag   string
+
 	diffUpdateFlag   string
 	diffCatchAllArgs []string
 
@@ -35,6 +37,9 @@ func RegisterPhabCLI(p *kingpin.Application) {
 		Action(func(context *kingpin.ParseContext) error {
 			return cli.doList()
 		})
+	c.Flag("base", "Specifies the common base commit to start the listing from.").Short('b').
+		StringVar(&cli.listBaseFlag)
+
 	//------------------------------------------------------------
 
 	// Diff Command: ---------------------------------------------
@@ -77,8 +82,13 @@ func RegisterPhabCLI(p *kingpin.Application) {
 }
 
 func (cli *phabCLI) doList() error {
-	upstreamName, err := git.GetUpstream()
-	clitools.UserError(err)
+	var err error
+
+	upstreamName := cli.listBaseFlag
+	if len(cli.listBaseFlag) == 0 {
+		upstreamName, err = git.GetUpstream()
+		clitools.UserError(err)
+	}
 
 	merrgeBaseCommit, err := git.GetMergeBase(upstreamName, "HEAD")
 	clitools.UserError(err)

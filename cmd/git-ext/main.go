@@ -23,6 +23,7 @@ func setUpParser() *kingpin.Application {
 	// Register Handlers
 	cli.RegisterStackCLI(cliParser)
 	cli.RegisterPhabCLI(cliParser)
+	cli.RegisterMetaCLI(cliParser)
 
 	return cliParser
 }
