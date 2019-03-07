@@ -37,7 +37,7 @@ func metadataFromString(message string) (title string, meta string, body string)
 	return groups[1], groups[2], body
 }
 
-func metadataToString(title string, meta string, body string) (message string){
+func metadataToString(title string, meta string, body string) (message string) {
 	message = title
 	if len(meta) > 0 {
 		message = fmt.Sprintf("%s | [%s]", message, meta)
@@ -72,7 +72,7 @@ func RegisterMetaCLI(p *kingpin.Application) {
 
 	// Set
 	c = cli.Command("set", "Add metadata to commit..").
-		Alias("p").
+		Alias("s").
 		Action(cli.doMetaSet)
 
 	c.Arg("value", "Value of the arg to set.").
@@ -86,7 +86,7 @@ func RegisterMetaCLI(p *kingpin.Application) {
 
 	// View
 	c = cli.Command("view", "Clear metadata from commit.").
-		Alias("d").
+		Alias("v").
 		Action(cli.doMetaView)
 
 	// NoQA:

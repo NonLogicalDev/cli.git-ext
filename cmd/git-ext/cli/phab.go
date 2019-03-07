@@ -20,7 +20,7 @@ type jsM = map[string]interface{}
 type phabCLI struct {
 	kingpin.CmdClause
 
-	listBaseFlag   string
+	listBaseFlag string
 
 	diffUpdateFlag   string
 	diffCatchAllArgs []string
@@ -168,15 +168,15 @@ func (cli *phabCLI) doLandRevision() error {
 	// It is recommened to create the following shortcut
 	// `git xland: "phab stack meta -p && phab sync && phab land"`
 
-	arcLand := arc.Cmd("land", "--hold").Unbuffer().Run()
+	arcLand := arc.Cmd("land", "--keep-branch").Unbuffer().Run()
 	if arcLand.HasError() {
 		clitools.UserError(arcLand.Err())
 	}
 
-	gitLand := git.Cmd("push", "origin", "--", "HEAD:master").Unbuffer().Run()
-	if gitLand.HasError() {
-		clitools.UserError(gitLand.Err())
-	}
+	// gitLand := git.Cmd("push", "origin", "--", "HEAD:master").Unbuffer().Run()
+	// if gitLand.HasError() {
+	// 	clitools.UserError(gitLand.Err())
+	// }
 
 	return nil
 }
