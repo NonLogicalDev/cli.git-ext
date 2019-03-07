@@ -20,7 +20,7 @@ func metadataFromString(message string) (title string, meta string, body string)
 	if fistLineEndIndex > 0 {
 		titleEndIndex := fistLineEndIndex
 
-		bodyEndIndex := len(message) - 1
+		bodyEndIndex := len(message)
 		bodyStartIndex := fistLineEndIndex
 		if bodyStartIndex > bodyEndIndex {
 			bodyStartIndex = bodyEndIndex

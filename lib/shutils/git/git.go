@@ -41,7 +41,7 @@ func ListBranches() ([]string, error) {
 
 func GetCommitWithFormat(sha, format string) (string, error) {
 	message, err := Cmd(
-		"show", "-s", fmt.Sprintf("--format=%v", format), sha,
+		"show", "--no-patch", fmt.Sprintf("--format=%v", format), sha,
 	).Run().Value()
 
 	return message, err
