@@ -55,16 +55,16 @@ func RegisterPhabCLI(p *kingpin.Application) {
 	//------------------------------------------------------------
 
 	// Msg Command: ----------------------------------------------
-	c = cli.Command("msg", "Get diff information from phab to HEAD commit.").
+	c = cli.Command("msg", "Get message of a Phab revision in Git Commit format.").
 		Action(func(context *kingpin.ParseContext) error {
 			return cli.doDiffMessagePrint(cli.diffMessageCopySrc)
 		})
-	c.Arg("revisionid", "The revision id to copy the message from.").Required().
+	c.Arg("revisionid", "The revision id to show the message from.").Required().
 		StringVar(&cli.diffMessageCopySrc)
 	//------------------------------------------------------------
 
 	// Sync Command: ---------------------------------------------
-	c = cli.Command("sync", "Get diff information from phab to HEAD commit.").
+	c = cli.Command("sync", "Sync local HEAD commit's title to Phab.").
 		Action(func(context *kingpin.ParseContext) error {
 			return cli.doSyncRevision()
 		})

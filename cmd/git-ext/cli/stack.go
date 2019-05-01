@@ -38,6 +38,7 @@ type stackCLI struct {
 }
 
 func RegisterStackCLI(p *kingpin.Application) {
+
 	cli := &stackCLI{CmdClause: *p.Command("stack", "Git macros to make working with a stack of commits easier.").Alias("st")}
 	var c *kingpin.CmdClause
 
@@ -159,6 +160,7 @@ func (cli *stackCLI) doEdit(ctx *kingpin.ParseContext) error {
 			Cmd("rebase", "-i", mergeBaseCommit).
 			SetENV("GIT_SEQUENCE_EDITOR", gitEditCMD).
 			SetENV("LANG", "en_US.UTF-8").
+			SetENV("PATH", os.Getenv("PATH")).
 			PipeStdout(os.Stdout).PipeStderr(os.Stderr).
 			Run().Err(),
 	)
