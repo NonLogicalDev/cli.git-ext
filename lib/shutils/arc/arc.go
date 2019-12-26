@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/NonLogicalDev/nld.cli.git-ext/lib/clitools"
+	"github.com/NonLogicalDev/cli.git-ext/lib/clitools"
 	shutils "github.com/NonLogicalDev/nld.lib.go.shutils"
 
 	"github.com/pkg/errors"

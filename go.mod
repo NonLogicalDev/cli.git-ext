@@ -1,4 +1,4 @@
-module github.com/NonLogicalDev/nld.cli.git-ext
+module github.com/NonLogicalDev/cli.git-ext
 
 require (
 	github.com/NonLogicalDev/nld.lib.go.shutils v0.0.0-20190110194354-0cd9fc3a7b86

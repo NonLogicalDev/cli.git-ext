@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/NonLogicalDev/nld.cli.git-ext/lib/clitools"
-	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils/git"
+	"github.com/NonLogicalDev/cli.git-ext/lib/clitools"
+	"github.com/NonLogicalDev/cli.git-ext/lib/shutils/git"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -22,6 +22,8 @@ var branchFormat = "D/%02d"
 type stackCLI struct {
 	kingpin.CmdClause
 
+	upstreamOverride string
+
 	rebaseEditPrefix string
 	rebaseEditFile   string
 
@@ -29,7 +31,6 @@ type stackCLI struct {
 
 	rebaseExtraArgs []string
 
-	labelBurninBranch   bool
 	labelDeleteBranches bool
 
 	metaGetFlag   bool
@@ -41,6 +42,7 @@ func RegisterStackCLI(p *kingpin.Application) {
 
 	cli := &stackCLI{CmdClause: *p.Command("stack", "Git macros to make working with a stack of commits easier.").Alias("st")}
 	var c *kingpin.CmdClause
+	cli.Flag("upstream", "Upstream branch override").Short('u').StringVar(&cli.upstreamOverride)
 
 	// Rebase Edit
 	c = cli.Command("rebase-edit", "Rewrite rebase todo file.").Hidden().
@@ -123,7 +125,7 @@ func (cli *stackCLI) doRebaseFileRewrite(ctx *kingpin.ParseContext) error {
 }
 
 func (cli *stackCLI) doRebase(ctx *kingpin.ParseContext) error {
-	upstreamName, err := git.GetUpstream()
+	upstreamName, err := upstreamWithFlag(cli.upstreamOverride)
 	clitools.UserError(err)
 
 	gitArgs := []interface{}{
@@ -145,7 +147,7 @@ func (cli *stackCLI) doEdit(ctx *kingpin.ParseContext) error {
 	targetSha, err := git.GetSha(cli.editTargetRef)
 	clitools.UserError(err)
 
-	upstreamName, err := git.GetUpstream()
+	upstreamName, err := upstreamWithFlag(cli.upstreamOverride)
 	clitools.UserError(err)
 
 	mergeBaseCommit, err := git.GetMergeBase(upstreamName, "HEAD")
@@ -192,7 +194,7 @@ func (cli *stackCLI) doLabelDelete(ctx *kingpin.ParseContext) error {
 }
 
 func (cli *stackCLI) doLabelCreate(ctx *kingpin.ParseContext) error {
-	upstreamName, err := git.GetUpstream()
+	upstreamName, err := upstreamWithFlag(cli.upstreamOverride)
 	clitools.UserError(err)
 
 	merrgeBaseCommit, err := git.GetMergeBase(upstreamName, "HEAD")
@@ -214,4 +216,16 @@ func (cli *stackCLI) doLabelCreate(ctx *kingpin.ParseContext) error {
 	}
 
 	return nil
+}
+
+func upstreamWithFlag(upstreamOverride string) (string, error)  {
+	var err error
+	var upstreamName string
+	if upstreamOverride != "" {
+		upstreamName = upstreamOverride
+	} else {
+		upstreamName, err = git.GetUpstream()
+	}
+	return  upstreamName, err
+
 }

@@ -7,9 +7,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/NonLogicalDev/nld.cli.git-ext/lib/clitools"
-	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils/arc"
-	"github.com/NonLogicalDev/nld.cli.git-ext/lib/shutils/git"
+	"github.com/NonLogicalDev/cli.git-ext/lib/clitools"
+	"github.com/NonLogicalDev/cli.git-ext/lib/shutils/arc"
+	"github.com/NonLogicalDev/cli.git-ext/lib/shutils/git"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )

@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/NonLogicalDev/nld.cli.git-ext/cmd/git-ext/cli"
-	"github.com/NonLogicalDev/nld.cli.git-ext/lib/clitools"
+	"github.com/NonLogicalDev/cli.git-ext/cmd/git-ext/cli"
+	"github.com/NonLogicalDev/cli.git-ext/lib/clitools"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )

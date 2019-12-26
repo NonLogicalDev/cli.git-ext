@@ -1,0 +1,11 @@
+# github.com/NonLogicalDev/nld.lib.go.shutils v0.0.0-20190110194354-0cd9fc3a7b86
+github.com/NonLogicalDev/nld.lib.go.shutils
+# github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
+github.com/alecthomas/template
+github.com/alecthomas/template/parse
+# github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf
+github.com/alecthomas/units
+# github.com/pkg/errors v0.8.0
+github.com/pkg/errors
+# gopkg.in/alecthomas/kingpin.v2 v2.2.6
+gopkg.in/alecthomas/kingpin.v2
